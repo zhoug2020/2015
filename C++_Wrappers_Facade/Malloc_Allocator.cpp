@@ -247,5 +247,6 @@ UPF_Static_Allocator_Base::dump (void) const
   UPF_DEBUG ((LM_DEBUG, UPF_TEXT ("\n")));
 
   UPF_DEBUG ((LM_DEBUG, UPF_END_DUMP));
+
 #endif /* UPF_HAS_DUMP */
 }

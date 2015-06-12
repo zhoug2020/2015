@@ -49,9 +49,9 @@ bool FileCheck::checkOneFile(const std::string& inFileName)
       if (fgets(buffer,LINEBUFF_SIZE,fp))
       {
          std::string line = buffer;
-         trim(line);
-         replaceString(TAB_STRING,TAB_REPLACE,line);
          replaceString(WINDOWS_RETURN,UNIX_RETURN,line);
+         replaceString(TAB_STRING,TAB_REPLACE,line);
+         trim(line);    
          memcpy(buffer,line.c_str(),line.size());
          fwrite(buffer,sizeof(char),line.size(),fpCopy);
          linNum++;
@@ -93,14 +93,15 @@ void FileCheck::replaceString(const std::string & seach, const std::string& repl
 void FileCheck::trim(std::string &line)
 {
    UINT32 length = 0;
-   if (!line.empty())
+   if (!line.empty() && line.length() > 2)
    {
-      size_t endPos = line.length() - 1;
+      size_t endPos = line.length() - 2;
       while (endPos)
       {
          if (isspace(line[endPos]))
          {
-            endPos --;
+            endPos--;
+            length++;
          }
          else
          {
@@ -108,9 +109,14 @@ void FileCheck::trim(std::string &line)
          }
       }
 
-      if (endPos < line.length() - 1 )
+      if(endPos == 0 && isspace(line[endPos]))
       {
-         line.replace(endPos+1,(line.length() - endPos - 2),"");
+         length++;
+         line.erase(endPos,length);
+      }
+      else if (endPos < line.length() - 1 )
+      {
+         line.erase(endPos+1,length);
       }
    }
 

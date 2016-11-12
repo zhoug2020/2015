@@ -3,6 +3,7 @@ import subprocess
 import os
 import re #regular express module
 import csv
+import sys
 ########################################################################################
 def getCurrentPath():
     try:
@@ -15,10 +16,9 @@ def getCurrentPath():
         print(err)
     pass
 ########################################################################################
-def readresults(path) :
-    src = path + "results.txt"
+def readresults(result_file) :
     try:
-        fp = open(src, "r")
+        fp = open(result_file, "r")
         lines = fp.readlines()
         fp.close()
         return lines
@@ -46,10 +46,11 @@ def deal_string(string, splitstr):
     return results
 
 ########################################################################################
-def writeresults(path, lines) :
-    src = path + "results.csv"
+def writeresults(outputfile, lines) :
+    if len(lines) == 0:
+        return
     try:
-        with open('csv_test.csv', 'w',newline='') as csvfile:
+        with open(outputfile, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["no", "ErrNo", "ErrType", "ErrDescription", "ErrStack", "Errmodue", "Errcode"])
             errlinecnt = 0
@@ -57,7 +58,7 @@ def writeresults(path, lines) :
             startflag = False
             errDesc = errDetails = erroNo = errModule = errCode = errType = ""
             for line in lines:
-                if (len(regSearch(line, "^Error #")) > 0):
+                if (len(regSearch(line, "^Error #"))) > 0 :
                     if errlinecnt > 0:
                         i = i + 1
                         #write line
@@ -68,7 +69,7 @@ def writeresults(path, lines) :
                     summary = deal_string(line, ':')
                     if (len(summary) > 0):
                         erroNo = ''.join(list(summary[0:1]))
-                        #print(erroNo)
+                        print("process %s" % erroNo)
                         tmpline =  ''.join(list(summary[1:]))
                         tmpline = tmpline.strip()
                         if tmpline.find("UNADDRESSABLE") != -1:
@@ -83,6 +84,13 @@ def writeresults(path, lines) :
                             errType = ""
                         errDesc = ''.join(list(summary[-1])).strip()
                         startflag = True
+                elif len(regSearch(line,"^========"))>0: #indicating end line
+                    if errlinecnt > 0:
+                        i = i + 1
+                        #write line
+                        writer.writerow([i,erroNo, errType, errDesc, errDetails, errModule, errCode])
+                        errDesc = errDetails = erroNo = errModule = errCode = errType = ""
+                        errlinecnt = 0
                 elif startflag:
                     errlinecnt += 1
                     if (errlinecnt == 1):
@@ -97,7 +105,18 @@ def writeresults(path, lines) :
      pass
 ########################################################################################
 if __name__ == '__main__':
-    lines = readresults(getCurrentPath())
-    writeresults(getCurrentPath(), lines)
-    if input("press any key to exit... ... ..."):
+    if (len(sys.argv) >=2):
+        resultfile = sys.argv[1] #command line mode
+        rpos = resultfile.rfind(os.path.sep)
+        if (rpos != -1) :
+            outputfile = resultfile[0:rpos] + os.path.sep +  "results.csv"
+            print(resultfile)
+        else:
+            sys.exit()
+    else:
+        resultfile = getCurrentPath() + "results.txt"
+        outputfile = getCurrentPath()  + "results.csv"
+    lines = readresults(resultfile)
+    writeresults(outputfile, lines)
+    if input("finished, press any key to exit... ... ..."):
         pass

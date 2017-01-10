@@ -1,0 +1,3 @@
+[submodule "small app/choujiang_bak"]
+	path = small app/choujiang_bak
+	url = ./
